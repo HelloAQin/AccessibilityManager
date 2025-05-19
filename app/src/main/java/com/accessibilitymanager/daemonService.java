@@ -152,8 +152,8 @@ public class daemonService extends Service {
         notification = new Notification.Builder(this)
                 .setAutoCancel(false)  // 设置为不可取消
                 .setOngoing(true)      // 设置为持续通知
-                .setContentTitle("无障碍保活服务")
-                .setContentText("正在运行中...")
+                .setContentTitle("海绵宝宝，猜猜我有几颗糖~")
+                .setContentText("猜对了两颗都给你！")
                 .setSmallIcon(R.drawable.tile)
                 .setPriority(Notification.PRIORITY_HIGH);  // 提高优先级
 
