@@ -18,6 +18,7 @@ import android.graphics.drawable.Icon;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.accessibility.AccessibilityManager;
@@ -76,7 +77,6 @@ public class daemonService extends Service {
 
             ApplicationInfo applicationInfo = new ApplicationInfo();
             try {
-
                 applicationInfo = packageManager.getApplicationInfo(serviceName.substring(0, serviceName.indexOf("/")), PackageManager.GET_META_DATA);
             } catch (PackageManager.NameNotFoundException ignored) {
             }
@@ -87,10 +87,12 @@ public class daemonService extends Service {
                 Toast.makeText(daemonService.this, "保活" + packageLabel, Toast.LENGTH_SHORT).show();
         }
         if (add.length() > 0) {
-            tmpSettingValue = add + s;
-            Settings.Secure.putString(getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, tmpSettingValue);
-//            notification.setContentText(add1 + new SimpleDateFormat("时间：H:mm ss秒", Locale.getDefault()).format(Calendar.getInstance().getTime())).setContentTitle("已保活以下无障碍服务：");
-            systemService.notify(1, notification.build());
+            // 添加1秒延时后再保活
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                tmpSettingValue = add + s;
+                Settings.Secure.putString(getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, tmpSettingValue);
+                systemService.notify(1, notification.build());
+            }, 1000);
         }
     }
 
