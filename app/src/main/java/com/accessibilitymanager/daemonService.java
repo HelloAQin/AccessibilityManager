@@ -89,9 +89,9 @@ public class daemonService extends Service {
         if (add.length() > 0) {
             // 添加1秒延时后再保活
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                tmpSettingValue = add + s;
-                Settings.Secure.putString(getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, tmpSettingValue);
-                systemService.notify(1, notification.build());
+            tmpSettingValue = add + s;
+            Settings.Secure.putString(getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, tmpSettingValue);
+            systemService.notify(1, notification.build());
             }, 1000);
         }
     }
@@ -108,21 +108,6 @@ public class daemonService extends Service {
         if (sp.getString("daemon", "").isEmpty()) {
             stopSelf();
             return;
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            if (getSystemService(Context.USER_SERVICE) == null) {
-                // 注册 ACTION_USER_UNLOCKED 广播
-                IntentFilter filter = new IntentFilter(Intent.ACTION_USER_UNLOCKED);
-                registerReceiver(new BroadcastReceiver() {
-                    @Override
-                    public void onReceive(Context context, Intent intent) {
-                        // 用户解锁后重启服务
-                        context.startForegroundService(new Intent(context, daemonService.class));
-                    }
-                }, filter);
-                return;
-            }
         }
         
         // 检查是否在直接启动模式下
@@ -148,12 +133,29 @@ public class daemonService extends Service {
         if (tmpSettingValue == null) tmpSettingValue = "";
 
         registerReceiver(myReceiver, new IntentFilter("android.intent.action.SCREEN_ON"));
-        //发送前台通知
-        notification = new Notification.Builder(this)
-                .setAutoCancel(true)
-                .setContentTitle("海绵宝宝，猜猜我有几颗糖~")
-                .setContentText("猜对了两颗都给你！");
+        
+        // 创建通知渠道
         systemService = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel notificationChannel = new NotificationChannel(
+                "daemon",
+                "保活无障碍",
+                NotificationManager.IMPORTANCE_HIGH  // 提高重要性
+            );
+            notificationChannel.enableLights(false);
+            notificationChannel.setShowBadge(false);
+            notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);  // 在锁屏界面显示
+            systemService.createNotificationChannel(notificationChannel);
+        }
+
+        // 创建通知
+        notification = new Notification.Builder(this)
+                .setAutoCancel(false)  // 设置为不可取消
+                .setOngoing(true)      // 设置为持续通知
+                .setContentTitle("无障碍保活服务")
+                .setContentText("正在运行中...")
+                .setSmallIcon(R.drawable.tile)
+                .setPriority(Notification.PRIORITY_HIGH);  // 提高优先级
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             notification
@@ -162,11 +164,6 @@ public class daemonService extends Service {
                     .setContentIntent(PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), PendingIntent.FLAG_IMMUTABLE));
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel notificationChannel = new NotificationChannel("daemon", "保活无障碍", NotificationManager.IMPORTANCE_DEFAULT);
-            notificationChannel.enableLights(false);
-            notificationChannel.setShowBadge(false);
-            notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_SECRET);
-            systemService.createNotificationChannel(notificationChannel);
             notification.setChannelId("daemon");
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
