@@ -48,6 +48,9 @@ jobs:
         keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
         keyPassword: ${{ secrets.KEY_PASSWORD }}
     
+    - name: List Release Directory
+      run: ls -la app/build/outputs/apk/release/
+    
     - name: Upload Debug APK
       uses: actions/upload-artifact@v4
       with:
@@ -58,4 +61,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: app-release
-        path: app/build/outputs/apk/release/app-release-signed.apk 
+        path: app/build/outputs/apk/release/*.apk 
