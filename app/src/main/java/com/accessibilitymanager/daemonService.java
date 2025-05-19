@@ -109,6 +109,21 @@ public class daemonService extends Service {
             stopSelf();
             return;
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            if (getSystemService(Context.USER_SERVICE) == null) {
+                // 注册 ACTION_USER_UNLOCKED 广播
+                IntentFilter filter = new IntentFilter(Intent.ACTION_USER_UNLOCKED);
+                registerReceiver(new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        // 用户解锁后重启服务
+                        context.startForegroundService(new Intent(context, daemonService.class));
+                    }
+                }, filter);
+                return;
+            }
+        }
         
         // 检查是否在直接启动模式下
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
