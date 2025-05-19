@@ -7,14 +7,15 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+env:
+  APP_VERSION: v1.0.0
+
 jobs:
   build:
     runs-on: ubuntu-latest
     
     steps:
     - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
     
     - name: Set up JDK 17
       uses: actions/setup-java@v4
@@ -60,11 +61,11 @@ jobs:
     - name: Create Release
       id: create_release
       uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
       with:
-        name: Release ${{ steps.get_version.outputs.VERSION }}
+        name: Release ${{ env.APP_VERSION }}
+        tag_name: ${{ env.APP_VERSION }}
         body: |
-          无障碍管理器 ${{ steps.get_version.outputs.VERSION }}
+          无障碍管理器 ${{ env.APP_VERSION }}
           
           ## 更新内容
           - 优化开机自启动
