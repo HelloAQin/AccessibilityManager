@@ -19,6 +19,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.accessibility.AccessibilityManager;
 import android.widget.Toast;
 
@@ -106,6 +107,16 @@ public class daemonService extends Service {
             stopSelf();
             return;
         }
+        
+        // 检查是否在直接启动模式下
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            if (getSystemService(Context.USER_SERVICE) == null) {
+                Log.d("daemonService", "Running in direct boot mode");
+                // 在直接启动模式下，延迟一些操作直到用户解锁
+                return;
+            }
+        }
+        
         packageManager = getPackageManager();
         Toast.makeText(daemonService.this, "启动保活", Toast.LENGTH_SHORT).show();
         List<AccessibilityServiceInfo> list = ((AccessibilityManager) getApplicationContext().getSystemService(Context.ACCESSIBILITY_SERVICE)).getInstalledAccessibilityServiceList();
